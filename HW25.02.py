@@ -2,11 +2,10 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib import mlab
 from sklearn import cross_validation
 from sklearn import tree
 from sklearn_pandas import cross_val_score
-#from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, f1_score, recall_score, precision_score
 
 df  = pd.read_csv('titanic.csv', index_col = 'PassengerId')
@@ -14,10 +13,14 @@ df  = pd.read_csv('titanic.csv', index_col = 'PassengerId')
 #-----------------------------------3-------------------------------------
 df = df.dropna() # удаляю пункты с Nan
 columns = ["Pclass", "Fare", "Sex", "Age", "Survived"]
+columns1 = ["Pclass", "Fare", "male", 'female' "Age", "Survived"]
 x = df[columns]
 x.head()
 df_sex = pd.get_dummies(x['Sex']) # для удобства создаются две новые колонки
 df_new = pd.concat([df, df_sex], axis=1)
+
+x['Sex'] = x['Sex'].map({'female': 0, 'male':1}).astype(int) #  для заданий 4 и 5
+
 columns1 = ["Survived"]
 y = df_new[columns1]
 #---------------------------------1----------------------------------
@@ -115,7 +118,7 @@ error_config = {'ecolor': '0.3'}
 #Р(А|В) = 0.9, Р(С|В2) = 0.7
 #----------------------------------4----------------------------------------
 xtrain, xtest, ytrain, ytest = cross_validation.train_test_split(x, y)
-mass = []
+
 #presort to True - предсортировка, мне показалось важным найти лучшие сплиты
 for t in range(1,100):
     clf= tree.DecisionTreeClassifier(random_state= None, max_features= None, 
@@ -139,25 +142,80 @@ for t in range(1,100):
     clf1 = clf1.fit(xtrain, ytrain)
     ypred = clf.predict(xtest)
     ypred1 = clf1.predict(xtest)
-    mass.append(cross_val_score(ytest, ypred1), cv = 100)
 
 print(classification_report(ytest, ypred))
 print(classification_report(ytest, ypred1))
 
 
-#false = (f1_score(ytest, ypred),recall_score(ytest, ypred),precision_score(ytest, ypred))
-#true = (f1_score(ytest, ypred1), recall_score(ytest, ypred1),precision_score(ytest, ypred1))
-#
+false = (f1_score(ytest, ypred),recall_score(ytest, ypred),precision_score(ytest, ypred))
+true = (f1_score(ytest, ypred1), recall_score(ytest, ypred1),precision_score(ytest, ypred1))
+
+bar_width = 0.35
+error_config = {'ecolor': '0.3'}
+
+rects1 = plt.bar(np.arange(3), false, bar_width,
+                 alpha=0.4,
+                 color='b',
+                 error_kw=error_config,
+                 label='with presort = False')
+
+rects2 = plt.bar(np.arange(3) + bar_width, true, bar_width,
+                 alpha=0.4,
+                 color='r',
+                 error_kw=error_config,
+                 label='with presort = True')
+
+
+plt.xlabel('metrics')
+plt.ylabel('total')
+plt.title('Num. 4')
+plt.xticks(np.arange(3) + bar_width / 2, ('f1', 'recall', 'precision'))
+plt.legend()
+
+# результаты улучшились, но не намного. Возможно, стоит поменять несколько пунктов.
+
+#---------------------------------5------------------------------------------
+
+# criterion to entropy. для расширения split area.   
+for t in range(1,100):
+    rfc = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
+                                 n_estimators=10, verbose=0,
+                                 max_leaf_nodes= None, oob_score=False, 
+                                 min_samples_leaf=1,
+                                 class_weight=None, max_features='auto', 
+                                 max_depth=None, min_samples_split=2,
+                                 random_state=None, 
+                                 min_weight_fraction_leaf=0.0, warm_start=False,
+                                 criterion='gini', n_jobs=1)
+    rfc1 = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
+                                 n_estimators=10, verbose=0,
+                                 max_leaf_nodes= None, oob_score=False, 
+                                 min_samples_leaf=1,
+                                 class_weight=None, max_features='auto', 
+                                 max_depth=None, min_samples_split=2,
+                                 random_state=None, 
+                                 min_weight_fraction_leaf=0.0, warm_start=False,
+                                 criterion='entropy', n_jobs=1)
+#    rfc = rfc.get_params(deep=True)
+    rfc.fit(xtrain, ytrain)
+    ypred = rfc.predict(xtest)
+    rfc1.fit(xtrain, ytrain)
+    ypred1 = rfc1.predict(xtest)
+print(classification_report(ytest, ypred))
+print(classification_report(ytest, ypred1))
+gini = (f1_score(ytest, ypred),recall_score(ytest, ypred),precision_score(ytest, ypred))
+entropy = (f1_score(ytest, ypred1), recall_score(ytest, ypred1),precision_score(ytest, ypred1))
+
 #bar_width = 0.35
 #error_config = {'ecolor': '0.3'}
 #
-#rects1 = plt.bar(np.arange(3), false, bar_width,
+#rects1 = plt.bar(np.arange(3), gini, bar_width,
 #                 alpha=0.4,
 #                 color='b',
 #                 error_kw=error_config,
 #                 label='with presort = False')
 #
-#rects2 = plt.bar(np.arange(3) + bar_width, true, bar_width,
+#rects2 = plt.bar(np.arange(3) + bar_width, entropy, bar_width,
 #                 alpha=0.4,
 #                 color='r',
 #                 error_kw=error_config,
@@ -169,6 +227,5 @@ print(classification_report(ytest, ypred1))
 #plt.title('Num. 4')
 #plt.xticks(np.arange(3) + bar_width / 2, ('f1', 'recall', 'precision'))
 #plt.legend()
-#plt.plot(mass)
-#plt.show()
-# результаты улучшились, но не намного. Возможно, стоит поменять несколько пунктов.
+
+# в обоих случаях сильного повышения результатов во всех метриках не обнаружилось
