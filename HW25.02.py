@@ -7,39 +7,66 @@ from sklearn import tree
 from sklearn_pandas import cross_val_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, f1_score, recall_score, precision_score
+from sklearn.tree import export_graphviz
+from IPython.display import Image  
+import pydotplus
+
 
 df  = pd.read_csv('titanic.csv', index_col = 'PassengerId')
 
 #-----------------------------------3-------------------------------------
 df = df.dropna() # удаляю пункты с Nan
 columns = ["Pclass", "Fare", "Sex", "Age", "Survived"]
-columns1 = ["Pclass", "Fare", "male", 'female' "Age", "Survived"]
-x = df[columns]
-x.head()
-df_sex = pd.get_dummies(x['Sex']) # для удобства создаются две новые колонки
+columns2 = ["Pclass", "Fare", "male", 'female' "Age"]#уже без класса выживших
+x0 = df[columns]
+x0.head()
+df_sex = pd.get_dummies(x0['Sex']) # для удобства создаются две новые колонки
 df_new = pd.concat([df, df_sex], axis=1)
 
+x = df[columns2]
 x['Sex'] = x['Sex'].map({'female': 0, 'male':1}).astype(int) #  для заданий 4 и 5
 
-columns1 = ["Survived"]
-y = df_new[columns1]
+col = ["Survived"]
+y = df_new[col]
 #---------------------------------1----------------------------------
+#здесь закомментированно, чтобы не запускать
 new = df_new.groupby('Survived').sum()
 f = new['female']
 m = new['male']
 FS, FNs = f[1], f[0]
 MS, MNs = m[1], m[0]
 
-#labels = 'FS', 'FNs', 'MS', 'MNs'# F - female, M - male, S - survived
-#sizes = [FS, FNs, MS, MNs] 
-#plt.pie(sizes, labels=labels, autopct='%1.1f%%',
+#fig, axes = plt.subplots(nrows=2, ncols=2)
+#ax0, ax1, ax2, ax3 = axes.flatten()
+#labels1 = 'FS', 'FNs'# F - female, M - male, S - survived
+#sizes1 = [FS, FNs] 
+#labels2 = 'MS', 'MNs'# F - female, M - male, S - survived
+#sizes2 = [MS, MNs]
+#labels3 = 'F', 'M'
+#sizes3 = [f[1], m[1]]
+#labels4 = 'F', 'M'
+#sizes4 = [f[0], m[0]]
+#ax0.pie(sizes1, labels=labels1, autopct='%1.1f%%',
 #        shadow=True, startangle=90)
-#plt.axis('equal') 
-#plt.title('Num. 1.1') 
+#ax0.axis('equal')
+#ax0.set_title('Выживание среди женщин')
+#ax1.pie(sizes2, labels=labels2, autopct='%1.1f%%',
+#        shadow=True, startangle=90)
+#ax1.axis('equal')
+#ax1.set_title('Выживание среди мужчин')
+#ax2.pie(sizes3, labels=labels3, autopct='%1.1f%%',
+#        shadow=True, startangle=90)
+#ax2.axis('equal')
+#ax2.set_title('Выживание среди женщин и мужчин')
+#ax3.pie(sizes4, labels=labels4, autopct='%1.1f%%',
+#        shadow=True, startangle=90)
+#ax3.axis('equal')
+#ax3.set_title('Невыживание среди женщин и мужчин')
+#plt.axis('equal')
 #plt.show()
-#Вывод: из выживших большинство женщины(44,8%), их же и погибло меньше всего(3.3%);
-#мужчинам пришлось труднее: разница между выжившими и нет всего 7.1% в пользу
-#(если так можно сказать) вторых.
+
+#Вывод: из выживших большинство женщины, их же и погибло меньше всего;
+#мужчинам пришлось труднее, выжило меньше половины.
 
 new = df_new.groupby(['Pclass']).sum()
 s = new['Survived']
@@ -49,14 +76,37 @@ FNs = summ[1] - FS
 SNs = summ[2] - SS
 TNs = summ[3] - TS
 
-#labels = 'FS', 'FNs', 'SS', 'SNs', 'TS', 'TNs' # F -first, S - second, T - third
-#sizes = [FS, FNs, SS, SNs, TS, TNs]  
-#plt.pie(sizes, labels=labels, autopct='%1.1f%%',
+#fig, axes = plt.subplots(nrows=2, ncols=2)
+#ax0, ax1, ax2, ax3 = axes.flatten()
+#labels1 = 'FS', 'FNs'# F - female, M - male, S - survived
+#sizes1 = [FS, FNs] 
+#labels2 = 'SS', 'SNs'# F - female, M - male, S - survived
+#sizes2 = [SS, SNs]
+#labels3 = 'TS', 'TNs'
+#sizes3 = [TS, TNs]
+#labels4 = '1', '2', '3'
+#sizes4 = [FS, SS, TS]
+#ax0.pie(sizes1, labels=labels1, autopct='%1.1f%%',
 #        shadow=True, startangle=90)
+#ax0.axis('equal')
+#ax0.set_title('Выживание среди 1 класса')
+#ax1.pie(sizes2, labels=labels2, autopct='%1.1f%%',
+#        shadow=True, startangle=90)
+#ax1.axis('equal')
+#ax1.set_title('Выживание среди 2 класса')
+#ax2.pie(sizes3, labels=labels3, autopct='%1.1f%%',
+#        shadow=True, startangle=90)
+#ax2.axis('equal')
+#ax2.set_title('Выживание среди 3 класса')
+#ax3.pie(sizes4, labels=labels4, autopct='%1.1f%%',
+#        shadow=True, startangle=90)
+#ax3.axis('equal')
+#ax3.set_title('Выжившие по классам')
 #plt.axis('equal')
-#plt.title('Num. 1.2')   
 #plt.show()
-#Вывод: Среди выживших превалирует первый класс. 
+
+#Вывод: Среди выживших превалирует первый класс. Выжила большая часть второго
+#и половина первого. 
 
 
 mass = []
@@ -115,96 +165,98 @@ error_config = {'ecolor': '0.3'}
 #третьего. Что интересно, у мужчины 2 класса вероятность выжить неожиданно больше,
 #чем у женщины третьего класса.
 #А - женщина, В1 - первый класс, С - мужчина, 
-#Р(А|В) = 0.9, Р(С|В2) = 0.7
+#Р(А|В1) = 0.9 (вероятность выжить женщине 1 класса), Р(С|В2) = 0.7
+#(вероятность выжить мужчине 2 класса)
 #----------------------------------4----------------------------------------
 xtrain, xtest, ytrain, ytest = cross_validation.train_test_split(x, y)
 
 #presort to True - предсортировка, мне показалось важным найти лучшие сплиты
-for t in range(1,100):
-    clf= tree.DecisionTreeClassifier(random_state= None, max_features= None, 
-                                     class_weight= None, 
-                                     max_leaf_nodes= None, 
-                                     min_samples_leaf= 1, criterion= 'gini', 
-                                     splitter= 'best', min_weight_fraction_leaf= 0.0, 
-                                     min_samples_split= 2, max_depth= None, 
-                                     presort= False, min_impurity_split= 1e-07)
+clf= tree.DecisionTreeClassifier(random_state= None, max_features= None, 
+                                 class_weight= None, 
+                                 max_leaf_nodes= None, 
+                                 min_samples_leaf= 1, criterion= 'gini', 
+                                 splitter= 'best', min_weight_fraction_leaf= 0.0, 
+                                 min_samples_split= 2, max_depth= None, 
+                                 presort= False, min_impurity_split= 1e-07)
         
-    clf1= tree.DecisionTreeClassifier(random_state= None, max_features= None, 
-                                     class_weight= None, 
-                                     max_leaf_nodes= None, 
-                                     min_samples_leaf= 1, criterion= 'gini', 
-                                     splitter= 'best', min_weight_fraction_leaf= 0.0, 
-                                     min_samples_split= 2, max_depth= None, 
-                                     presort= True, min_impurity_split= 1e-07)
+clf1= tree.DecisionTreeClassifier(random_state= None, max_features= None, 
+                                  class_weight= None, 
+                                  max_leaf_nodes= None, 
+                                  min_samples_leaf= 1, criterion= 'entropy', 
+                                  splitter= 'best', min_weight_fraction_leaf= 0.0, 
+                                  min_samples_split= 2, max_depth= None, 
+                                  presort= True, min_impurity_split= 1e-07)
 
-    clf = clf.fit(xtrain, ytrain)
-#    clf = clf.get_params(deep=True)
-    clf1 = clf1.fit(xtrain, ytrain)
-    ypred = clf.predict(xtest)
-    ypred1 = clf1.predict(xtest)
+clf = clf.fit(xtrain, ytrain)
 
-print(classification_report(ytest, ypred))
-print(classification_report(ytest, ypred1))
+clf1 = clf1.fit(xtrain, ytrain)
+ypred = clf.predict(xtest)
+ypred1 = clf1.predict(xtest)
+#
+#print(classification_report(ytest, ypred))
+#print(classification_report(ytest, ypred1))
 
+#
+#fir = (f1_score(ytest, ypred),recall_score(ytest, ypred),precision_score(ytest, ypred))
+#sec = (f1_score(ytest, ypred1), recall_score(ytest, ypred1),precision_score(ytest, ypred1))
 
-false = (f1_score(ytest, ypred),recall_score(ytest, ypred),precision_score(ytest, ypred))
-true = (f1_score(ytest, ypred1), recall_score(ytest, ypred1),precision_score(ytest, ypred1))
-
-bar_width = 0.35
-error_config = {'ecolor': '0.3'}
-
-rects1 = plt.bar(np.arange(3), false, bar_width,
-                 alpha=0.4,
-                 color='b',
-                 error_kw=error_config,
-                 label='with presort = False')
-
-rects2 = plt.bar(np.arange(3) + bar_width, true, bar_width,
-                 alpha=0.4,
-                 color='r',
-                 error_kw=error_config,
-                 label='with presort = True')
-
-
-plt.xlabel('metrics')
-plt.ylabel('total')
-plt.title('Num. 4')
-plt.xticks(np.arange(3) + bar_width / 2, ('f1', 'recall', 'precision'))
-plt.legend()
+#bar_width = 0.35
+#error_config = {'ecolor': '0.3'}
+#
+#rects1 = plt.bar(np.arange(3), fir, bar_width,
+#                 alpha=0.4,
+#                 color='b',
+#                 error_kw=error_config,
+#                 label='with presort = False')
+#
+#rects2 = plt.bar(np.arange(3) + bar_width, sec, bar_width,
+#                 alpha=0.4,
+#                 color='r',
+#                 error_kw=error_config,
+#                 label='with presort = True')
+#
+#
+#plt.xlabel('metrics')
+#plt.ylabel('total')
+#plt.title('Результаты по деревьям')
+#plt.xticks(np.arange(3) + bar_width / 2, ('f1', 'recall', 'precision'))
+#plt.legend()
 
 # результаты улучшились, но не намного. Возможно, стоит поменять несколько пунктов.
-
+dot_data = tree.export_graphviz(clf, out_file=tree.dot) 
+#graph = pydotplus.graph_from_dot_data(dot_data)  
+#Image(graph.create_png())  #чтобы не запускалось
 #---------------------------------5------------------------------------------
 
 # criterion to entropy. для расширения split area.   
-for t in range(1,100):
-    rfc = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
-                                 n_estimators=10, verbose=0,
-                                 max_leaf_nodes= None, oob_score=False, 
-                                 min_samples_leaf=1,
-                                 class_weight=None, max_features='auto', 
-                                 max_depth=None, min_samples_split=2,
-                                 random_state=None, 
-                                 min_weight_fraction_leaf=0.0, warm_start=False,
-                                 criterion='gini', n_jobs=1)
-    rfc1 = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
-                                 n_estimators=10, verbose=0,
-                                 max_leaf_nodes= None, oob_score=False, 
-                                 min_samples_leaf=1,
-                                 class_weight=None, max_features='auto', 
-                                 max_depth=None, min_samples_split=2,
-                                 random_state=None, 
-                                 min_weight_fraction_leaf=0.0, warm_start=False,
-                                 criterion='entropy', n_jobs=1)
-#    rfc = rfc.get_params(deep=True)
-    rfc.fit(xtrain, ytrain)
-    ypred = rfc.predict(xtest)
-    rfc1.fit(xtrain, ytrain)
-    ypred1 = rfc1.predict(xtest)
-print(classification_report(ytest, ypred))
-print(classification_report(ytest, ypred1))
-gini = (f1_score(ytest, ypred),recall_score(ytest, ypred),precision_score(ytest, ypred))
-entropy = (f1_score(ytest, ypred1), recall_score(ytest, ypred1),precision_score(ytest, ypred1))
+
+#rfc = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
+#                                 n_estimators=10, verbose=0,
+#                                 max_leaf_nodes= None, oob_score=False, 
+#                                 min_samples_leaf=1,
+#                                 class_weight=None, max_features='auto', 
+#                                 max_depth=None, min_samples_split=2,
+#                                 random_state=None, 
+#                                 min_weight_fraction_leaf=0.0, warm_start=False,
+#                                 criterion='gini', n_jobs=1)
+#rfc1 = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
+#                                 n_estimators=10, verbose=0,
+#                                 max_leaf_nodes= None, oob_score=False, 
+#                                 min_samples_leaf=1,
+#                                 class_weight=None, max_features='auto', 
+#                                 max_depth=None, min_samples_split=2,
+#                                 random_state=None, 
+#                                 min_weight_fraction_leaf=0.0, warm_start=False,
+#                                 criterion='entropy', n_jobs=1)
+#
+#rfc = rfc.fit(xtrain, ytrain)
+#ypred = rfc.predict(xtest)
+#rfc1 = rfc1.fit(xtrain, ytrain)
+#ypred1 = rfc1.predict(xtest)
+#print(classification_report(ytest, ypred))
+#print(classification_report(ytest, ypred1))
+#gini = (f1_score(ytest, ypred),recall_score(ytest, ypred),precision_score(ytest, ypred))
+#entropy = (f1_score(ytest, ypred1), recall_score(ytest, ypred1),precision_score(ytest, ypred1))
 
 #bar_width = 0.35
 #error_config = {'ecolor': '0.3'}
@@ -224,7 +276,7 @@ entropy = (f1_score(ytest, ypred1), recall_score(ytest, ypred1),precision_score(
 #
 #plt.xlabel('metrics')
 #plt.ylabel('total')
-#plt.title('Num. 4')
+#plt.title('Результаты по лесам')
 #plt.xticks(np.arange(3) + bar_width / 2, ('f1', 'recall', 'precision'))
 #plt.legend()
 
