@@ -24,6 +24,7 @@ wnl = WordNetLemmatizer()
 gnb = GaussianNB()
 
 db0 = pd.read_csv('SMSSpamCollection', sep='\t', names = ['A','B'])#вообще не сбалансирован
+#делать дамми классифаер не имеет смысла, с подобным распределением хороших результатов не получить, надо сравнять число примеров
 db0['A'] = db0['A'].map({'spam': 0, 'ham':1}).astype(int)
 x1 = db0['A']
 y1 = db0['B']
