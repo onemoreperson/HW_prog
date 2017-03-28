@@ -6,17 +6,19 @@ from sklearn.model_selection import train_test_split
 from nltk.corpus import stopwords
 from nltk.tokenize import  wordpunct_tokenize
 from nltk.stem.wordnet import WordNetLemmatizer
-wml = WordNetLemmatizer()
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 import matplotlib.pyplot as plt
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 from sklearn import linear_model
 from sklearn import tree
-clf = tree.DecisionTreeClassifier()
 from sklearn.ensemble import RandomForestClassifier
-rfc = RandomForestClassifier()
 from sklearn import svm
+from sklearn.dummy import DummyClassifier
+
+clf = tree.DecisionTreeClassifier()
+rfc = RandomForestClassifier()
+wml = WordNetLemmatizer()
 
 
 df = pd.read_csv('C:/Users/Оля/Desktop/All-seasons.csv')
@@ -27,23 +29,21 @@ Kyle = df[df['Character'] == 'Cartman']
 Kenny = df[df['Character'] == 'Kenny']
 
 #для лемматизации текста и удаения стопслов, обсценную лексику удаляить не стоит, есть некоторая
-#специфическая для персонажей. ф-я используется в векторах.
+#специфическая для персонажей. ф-я используется в векторах  в качестве лемматизатора и токенизатора.
 def lemm(text):
     stop_words = set(stopwords.words('english'))
     word_tokens = wordpunct_tokenize(text)    
     mass = [wml.lemmatize(word) for word in word_tokens if word not in stop_words]
     return mass    
 
-train = pd.concat([Stan[:500], Kyle[:500], Cartman[:500], Kenny[:500]], ignore_index = True)
+train = pd.concat([Stan, Kyle, Cartman, Kenny], ignore_index = True)
 
-test = pd.concat([Stan, Kyle, Cartman, Kenny], ignore_index = True)
 
-#для тренировки
-xtrain, xtest, ytrain, ytest = train_test_split(list(train['Line']), np.array(train['Character'])) 
-#итоговая выборка
-x_train, x_test, y_train, y_test = train_test_split(list(test['Line']), np.array(test['Character']))
+x_train, x_test, y_train, y_test = train_test_split(list(train['Line']), np.array(train['Character'])) 
+#сверху тестовая выборка, снизу еще раз делим для обучения
+xtrain, xtest, ytrain, ytest = train_test_split(x_train, y_train)
 #--------------------------------------------------------------------------------------------------
-# в качестве baseline возьмем деревья.
+
 cv = CountVectorizer(token_pattern = '[^a-zA-Z0-9]', tokenizer = lemm, max_df = 0.7)
 cvtrain = cv.fit_transform(xtrain)
 cvtest = cv.transform(xtest)
@@ -51,7 +51,8 @@ cvtest = cv.transform(xtest)
 y_pred = clf.fit(cvtrain, ytrain).predict(cvtest)
 
 mat = confusion_matrix(ytest, y_pred)
-# смотрим результаты по матрицам 
+# смотрим результаты по матрицам (кто из персонажей лучше определяется и при каких условиях вектора)
+#выше в векторе указаны наилучшие параметры из тех , что я перебрала
 #-----------------------------------------------------------------------------
 def plot_confusion_matrix(cm, classes,
                           normalize=False,
@@ -78,6 +79,7 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
 #-----------------------------------------------------------------------------
+#комментирую, чтобы лишний раз не запускать
 #np.set_printoptions(precision=2)
 #
 #plt.figure()
@@ -111,16 +113,24 @@ print('Bayes')
 #print(classification_report(ytest, y_pred3, target_names=['Stan', 'Kyle', 'Cartman', 'Kenny']))
 print(accuracy_score(ytest, y_pred3))
 #------------------------------------------------------------------------------
-# лучший результат дает Байес. В данном случае самый низкийрезультат у baseline.
-# полная тестовая выборка
+# лучший результат дает Байес. В данном случае самый низкий результат у tree.
+# полная тестовая выборка ниже
 #------------------------------------------------------------------------------
 cv1train = cv.fit_transform(x_train)
 cv1test = cv.transform(x_test)
 
 y_pred_b = clf.fit(cv1train, y_train).predict(cv1test)
 
-print('Bayes')
+print('Bayes best')
 #print(classification_report(ytest, y_pred3, target_names=['Stan', 'Kyle', 'Cartman', 'Kenny']))
 print(accuracy_score(y_test, y_pred_b))
 
+#Baseline
+#зададим простейший базовый классификотор
+print(Baseline)
+dc = DummyClassifier()
+cv_test = cv.fit_transform(x_train)
+y_pred_b1 = dc.fit(cv1train, y_train).predict(cv1test)
+print(accuracy_score(y_test, y_pred_b1))
 
+#Байес значительно превосходит базовый классификатор по тестовой выборке
