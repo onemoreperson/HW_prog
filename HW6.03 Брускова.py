@@ -17,17 +17,27 @@ from sklearn import tree
 from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 from nltk import word_tokenize, wordpunct_tokenize
 from sklearn.ensemble import RandomForestClassifier
-
 tknzr = TweetTokenizer()
 st = EnglishStemmer()
 wnl = WordNetLemmatizer() 
 gnb = GaussianNB()
 
 db0 = pd.read_csv('SMSSpamCollection', sep='\t', names = ['A','B'])#вообще не сбалансирован
-#делать дамми классифаер не имеет смысла, с подобным распределением хороших результатов не получить, надо сравнять число примеров
 db0['A'] = db0['A'].map({'spam': 0, 'ham':1}).astype(int)
 x1 = db0['A']
 y1 = db0['B']
+db0['C'] = range(len(x1))
+
+#--------------------не надо-смотреть---------------------------------------------------
+#xtrain, xtest, ytrain, ytest = train_test_split(x1, y1)
+#
+#clf = DummyClassifier(constant=None, strategy='most_frequent',random_state=0,)
+#clf.fit(xtrain, ytrain)
+#a = clf.score(xtest, ytest) 
+#
+#print(a)
+
+#------------------------------------------------------------------------
 
 
 a = db0[db0['A']==0]
@@ -35,33 +45,26 @@ b = db0[db0['A']==1]
 
 summ = [i for i in a['C'][:300]] + [i1 for i1 in b['C'][:300]]# делаем сбалансированную выборку
 #в нее войдет равное кол-во примеров
-db = pd.DataFrame(db0, index = sorted(summ))# по 50% спама и хама благодаря массиву 
+db = pd.DataFrame(db0, index = sorted(summ))# по 50% спама и хама  
 
 x = db['B']
 y = db['A']
 
 
-db = pd.DataFrame(db0, index = sorted(summ))# по 50% спама и хама    
-x = db['A']
-y = db['B']
-
-
-####для стемов и лемматизации в векторах, здесь все шло методом перебора, поэтому результаты внизу
+#### функции для стемов и лемматизации
 def lem(y): 
     y = re.sub(r'\s+', ' ', str(y))
-##    y = y.lower()
+
     tok = tknzr.tokenize(y)
     lem = [wnl.lemmatize(i) for i in tok]
     return( " ".join(lem)) 
 
-
 def ste(y):  
     y = re.sub(r'\s+', ' ', str(y))
-##    y = y.lower()
+
     tok = tknzr.tokenize(y)
     ste = [st.stem(i) for i in tok]
     return( " ".join(ste))   
-
 
 xtrain, xtest, ytrain, ytest = train_test_split(list(x), np.array(y))
 clf = CountVectorizer(analyzer = "word",   
@@ -82,7 +85,7 @@ data = clf.transform(xtest)
 naive_model = MultinomialNB()
 cv_results = naive_model.fit(vectorizer, ytrain).predict(data)
 
-#посмотрим результаты по метрикам разных векторов
+
 print('Bayes CV')
 print(classification_report(ytest, cv_results, target_names=['S', 'H']))
 
@@ -93,10 +96,10 @@ print('Bayes TF')
 print(classification_report(ytest, cv_results1, target_names=['S', 'H']))
 # 
 #в большинстве случаев тфидф работает хуже, только лучший результат вышел одинаково на обоих векторах
-#самые высокие результаты дает параметр глубины max_df при значении 0.5 (высшие из всех испробованных)
-#лемматизация и стемизация мало отличаются друг от друга (токенизация уже включена в ф-ции)
-#если считать знаки препинания отдельными токенами (wordpunkt и token_pattern были использованы) - результат выше
-#стоп слова мало что меняют, по крайней мере встроенные
+#самые высокие результаты дает параметр max_df при значении 0.5
+#лемматизация и стемизация мало отличаются друг от друга
+#если считать знаки препинания отдельными токенами - результат выше
+#стоп слова мало что меняют
 #
 #
 #------------------------------2-----------------------------------------
