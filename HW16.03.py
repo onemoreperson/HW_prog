@@ -119,7 +119,7 @@ print(accuracy_score(ytest, y_pred3))
 cv1train = cv.fit_transform(x_train)
 cv1test = cv.transform(x_test)
 
-y_pred_b = clf.fit(cv1train, y_train).predict(cv1test)
+y_pred_b = clf.predict(cv1test)
 
 print('Bayes best')
 #print(classification_report(ytest, y_pred3, target_names=['Stan', 'Kyle', 'Cartman', 'Kenny']))
