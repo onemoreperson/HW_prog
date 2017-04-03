@@ -17,7 +17,7 @@ df  = pd.read_csv('titanic.csv', index_col = 'PassengerId')
 #-----------------------------------3-------------------------------------
 df = df.dropna() # удаляю пункты с Nan
 columns = ["Pclass", "Fare", "Sex", "Age", "Survived"]
-columns2 = ["Pclass", "Fare", "male", 'female' "Age"]#уже без класса выживших
+columns2 = ["Pclass", "Fare", "male", 'female', "Age"]#уже без класса выживших
 x0 = df[columns]
 x0.head()
 df_sex = pd.get_dummies(x0['Sex']) # для удобства создаются две новые колонки
