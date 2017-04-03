@@ -20,7 +20,6 @@ clf = tree.DecisionTreeClassifier()
 rfc = RandomForestClassifier()
 wml = WordNetLemmatizer()
 
-
 df = pd.read_csv('C:/Users/Оля/Desktop/All-seasons.csv')
 
 Stan = df[df['Character'] == 'Stan']
@@ -38,12 +37,14 @@ def lemm(text):
 
 train = pd.concat([Stan, Kyle, Cartman, Kenny], ignore_index = True)
 
+#test = pd.concat([Stan, Kyle, Cartman, Kenny], ignore_index = True)
 
+#
 x_train, x_test, y_train, y_test = train_test_split(list(train['Line']), np.array(train['Character'])) 
-#сверху тестовая выборка, снизу еще раз делим для обучения
+#
 xtrain, xtest, ytrain, ytest = train_test_split(x_train, y_train)
 #--------------------------------------------------------------------------------------------------
-
+# .
 cv = CountVectorizer(token_pattern = '[^a-zA-Z0-9]', tokenizer = lemm, max_df = 0.7)
 cvtrain = cv.fit_transform(xtrain)
 cvtest = cv.transform(xtest)
@@ -113,24 +114,25 @@ print('Bayes')
 #print(classification_report(ytest, y_pred3, target_names=['Stan', 'Kyle', 'Cartman', 'Kenny']))
 print(accuracy_score(ytest, y_pred3))
 #------------------------------------------------------------------------------
-# лучший результат дает Байес. В данном случае самый низкий результат у tree.
+# лучший результат дает Байес. В данном случае самый низкийрезультат у tree.
 # полная тестовая выборка ниже
 #------------------------------------------------------------------------------
-cv1train = cv.fit_transform(x_train)
+#cv1train = cv.fit_transform(x_train)
 cv1test = cv.transform(x_test)
 
-y_pred_b = clf.predict(cv1test)
+y_pred_b = mnb.predict(cv1test)
 
 print('Bayes best')
 #print(classification_report(ytest, y_pred3, target_names=['Stan', 'Kyle', 'Cartman', 'Kenny']))
 print(accuracy_score(y_test, y_pred_b))
 
 #Baseline
-#зададим простейший базовый классификотор
-print(Baseline)
+print('Baseline')
 dc = DummyClassifier()
 cv_test = cv.fit_transform(x_train)
 y_pred_b1 = dc.fit(cv1train, y_train).predict(cv1test)
 print(accuracy_score(y_test, y_pred_b1))
 
 #Байес значительно превосходит базовый классификатор по тестовой выборке
+
+
