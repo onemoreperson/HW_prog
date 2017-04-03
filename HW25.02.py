@@ -11,13 +11,13 @@ from sklearn.tree import export_graphviz
 from IPython.display import Image  
 import pydotplus
 
-
 df  = pd.read_csv('titanic.csv', index_col = 'PassengerId')
-
+#дальнейшие комментарии, чтобы не запускалось
 #-----------------------------------3-------------------------------------
 df = df.dropna() # удаляю пункты с Nan
 columns = ["Pclass", "Fare", "Sex", "Age", "Survived"]
-columns2 = ["Pclass", "Fare", "male", 'female', "Age"]#уже без класса выживших
+#columns1 = ["Pclass", "Fare", "male", 'female', "Age", "Survived"]
+columns2 = ["Pclass", "Fare", "Sex", "Age"]
 x0 = df[columns]
 x0.head()
 df_sex = pd.get_dummies(x0['Sex']) # для удобства создаются две новые колонки
@@ -28,8 +28,8 @@ x['Sex'] = x['Sex'].map({'female': 0, 'male':1}).astype(int) #  для зада�
 
 col = ["Survived"]
 y = df_new[col]
+print()
 #---------------------------------1----------------------------------
-#здесь закомментированно, чтобы не запускать
 new = df_new.groupby('Survived').sum()
 f = new['female']
 m = new['male']
@@ -76,6 +76,7 @@ FNs = summ[1] - FS
 SNs = summ[2] - SS
 TNs = summ[3] - TS
 
+
 #fig, axes = plt.subplots(nrows=2, ncols=2)
 #ax0, ax1, ax2, ax3 = axes.flatten()
 #labels1 = 'FS', 'FNs'# F - female, M - male, S - survived
@@ -106,7 +107,7 @@ TNs = summ[3] - TS
 #plt.show()
 
 #Вывод: Среди выживших превалирует первый класс. Выжила большая часть второго
-#и половина первого. 
+#и половина первого.
 
 
 mass = []
@@ -155,7 +156,7 @@ error_config = {'ecolor': '0.3'}
 #
 #plt.xlabel('Class')
 #plt.ylabel('probability')
-#plt.title('Num. 2')
+#plt.title('Вероятность выжить ж и м по классу')
 #plt.xticks(np.arange(3) + bar_width / 2, ('1', '2', '3'))
 #plt.legend()
 #
@@ -171,6 +172,7 @@ error_config = {'ecolor': '0.3'}
 xtrain, xtest, ytrain, ytest = cross_validation.train_test_split(x, y)
 
 #presort to True - предсортировка, мне показалось важным найти лучшие сплиты
+
 clf= tree.DecisionTreeClassifier(random_state= None, max_features= None, 
                                  class_weight= None, 
                                  max_leaf_nodes= None, 
@@ -223,31 +225,29 @@ ypred1 = clf1.predict(xtest)
 #plt.legend()
 
 # результаты улучшились, но не намного. Возможно, стоит поменять несколько пунктов.
-dot_data = tree.export_graphviz(clf, out_file=tree.dot) 
-#graph = pydotplus.graph_from_dot_data(dot_data)  
-#Image(graph.create_png())  #чтобы не запускалось
+
 #---------------------------------5------------------------------------------
 
 # criterion to entropy. для расширения split area.   
 
-#rfc = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
-#                                 n_estimators=10, verbose=0,
-#                                 max_leaf_nodes= None, oob_score=False, 
-#                                 min_samples_leaf=1,
-#                                 class_weight=None, max_features='auto', 
-#                                 max_depth=None, min_samples_split=2,
-#                                 random_state=None, 
-#                                 min_weight_fraction_leaf=0.0, warm_start=False,
-#                                 criterion='gini', n_jobs=1)
-#rfc1 = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
-#                                 n_estimators=10, verbose=0,
-#                                 max_leaf_nodes= None, oob_score=False, 
-#                                 min_samples_leaf=1,
-#                                 class_weight=None, max_features='auto', 
-#                                 max_depth=None, min_samples_split=2,
-#                                 random_state=None, 
-#                                 min_weight_fraction_leaf=0.0, warm_start=False,
-#                                 criterion='entropy', n_jobs=1)
+rfc = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
+                                 n_estimators=10, verbose=0,
+                                 max_leaf_nodes= None, oob_score=False, 
+                                 min_samples_leaf=1,
+                                 class_weight=None, max_features='auto', 
+                                 max_depth=None, min_samples_split=2,
+                                 random_state=None, 
+                                 min_weight_fraction_leaf=0.0, warm_start=False,
+                                 criterion='gini', n_jobs=1)
+rfc1 = RandomForestClassifier(bootstrap=True, min_impurity_split=1e-07, 
+                                 n_estimators=10, verbose=0,
+                                 max_leaf_nodes= None, oob_score=False, 
+                                 min_samples_leaf=1,
+                                 class_weight=None, max_features='auto', 
+                                 max_depth=None, min_samples_split=2,
+                                 random_state=None, 
+                                 min_weight_fraction_leaf=0.0, warm_start=False,
+                                 criterion='entropy', n_jobs=1)
 #
 #rfc = rfc.fit(xtrain, ytrain)
 #ypred = rfc.predict(xtest)
