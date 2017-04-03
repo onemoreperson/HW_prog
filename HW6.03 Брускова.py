@@ -26,7 +26,7 @@ db0 = pd.read_csv('SMSSpamCollection', sep='\t', names = ['A','B'])#вообще
 db0['A'] = db0['A'].map({'spam': 0, 'ham':1}).astype(int)
 x1 = db0['A']
 y1 = db0['B']
-db0['C'] = range(len(x1))
+db0['C'] = range(len(x1))#создаем 3 колонку с нумерацией
 
 #--------------------не надо-смотреть---------------------------------------------------
 #xtrain, xtest, ytrain, ytest = train_test_split(x1, y1)
